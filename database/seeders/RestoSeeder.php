@@ -15,8 +15,6 @@ class RestoSeeder extends Seeder
      */
     public function run()
     {
-        if (config('app.debug', false)) {
-            Resto::factory()->count(100)->create();
-        }
+        Resto::factory()->count(100)->create();
     }
 }
