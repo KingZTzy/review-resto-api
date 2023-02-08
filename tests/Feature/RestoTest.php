@@ -3,11 +3,11 @@
 namespace Tests\Feature;
 
 use Tests\TestCase;
+use App\Models\User;
 use App\Models\Resto;
-use Illuminate\Foundation\Testing\WithFaker;
+use App\Models\Review;
+use Laravel\Sanctum\Sanctum;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-
-use function PHPUnit\Framework\assertJson;
 
 class RestoTest extends TestCase
 {
@@ -19,8 +19,8 @@ class RestoTest extends TestCase
         Resto::factory()->count($count)->create();
 
         $this->getJson(route('restos.index'))
-        ->assertOk()
-        ->assertJsonCount($count);
+            ->assertOk()
+            ->assertJsonCount($count);
     }
 
     public function test_user_can_create_resto()
@@ -35,18 +35,18 @@ class RestoTest extends TestCase
         $data = Resto::factory()->createOne();
 
         $this->getJson(route('restos.show', $data))
-        ->assertOk()
-        ->assertJsonStructure(['name', 'description', 'address']);
+            ->assertOk()
+            ->assertJsonStructure(['name', 'description', 'address']);
     }
 
     public function test_user_can_edit_resto()
     {
         $UpdatedData = Resto::factory()->makeOne()->toArray();
         $data = Resto::factory()->createOne();
-        
+
         $this->patchJson(route('restos.update', $data), $UpdatedData)
-        ->assertOk()
-        ->assertJsonStructure(['name', 'description', 'address']);
+            ->assertOk()
+            ->assertJsonStructure(['name', 'description', 'address']);
     }
 
     public function test_user_can_delete_resto()
@@ -54,7 +54,22 @@ class RestoTest extends TestCase
         $data = Resto::factory()->createOne();
 
         $this->deleteJson(route('restos.destroy', $data))
-        ->assertOk()
-        ->assertJsonStructure(['name', 'description', 'address']);
+            ->assertOk()
+            ->assertJsonStructure(['name', 'description', 'address']);
+    }
+
+    public function test_user_can_list_reviews_for_this_record()
+    {
+        $reviewCount = 5;
+        $record = Resto::factory()
+            ->has(Review::factory()->count($reviewCount))
+            ->create();
+
+        $user = User::factory()->createOne();
+        Sanctum::actingAs($user);
+
+        $this->getJson(route('restos.reviews', $record))
+            ->assertOk()
+            ->assertJsonCount($reviewCount);
     }
 }
